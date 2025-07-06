@@ -186,12 +186,6 @@ The container includes a health check endpoint at `/health` that returns:
 - No sensitive data stored in container
 - Registry credentials passed via environment variables
 
-## Support
-
-- **GitHub**: [Issues and Discussions](https://github.com/your-username/docker-registry-browser)
-- **Docker Hub**: [Container Images](https://hub.docker.com/r/your-dockerhub-username/docker-registry-browser)
-- **Unraid Forums**: [Community Support](https://forums.unraid.net/)
-
 ## License
 
 MIT License - see LICENSE file for details.
