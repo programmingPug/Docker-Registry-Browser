@@ -1,0 +1,332 @@
+@use '@angular/material' as mat;
+
+// Include the common styles for Angular Material
+@include mat.core();
+
+// Define a light theme
+$light-primary: mat.define-palette(mat.$indigo-palette);
+$light-accent: mat.define-palette(mat.$pink-palette, A200, A100, A400);
+$light-warn: mat.define-palette(mat.$red-palette);
+$light-theme: mat.define-light-theme((
+  color: (
+    primary: $light-primary,
+    accent: $light-accent,
+    warn: $light-warn,
+  )
+));
+
+// Define a dark theme
+$dark-primary: mat.define-palette(mat.$blue-grey-palette);
+$dark-accent: mat.define-palette(mat.$amber-palette, A200, A100, A400);
+$dark-warn: mat.define-palette(mat.$deep-orange-palette);
+$dark-theme: mat.define-dark-theme((
+  color: (
+    primary: $dark-primary,
+    accent: $dark-accent,
+    warn: $dark-warn,
+  )
+));
+
+// Apply the light theme by default
+@include mat.all-component-themes($light-theme);
+
+// Apply the dark theme when the .dark-theme class is present
+.dark-theme {
+  @include mat.all-component-colors($dark-theme);
+}
+
+// Ensure Material Icons load properly
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+.material-icons {
+  font-family: 'Material Icons' !important;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+mat-icon {
+  font-family: 'Material Icons' !important;
+  font-feature-settings: 'liga';
+}
+
+.mat-icon {
+  font-family: 'Material Icons' !important;
+}
+
+html, body { 
+  height: 100%; 
+  margin: 0; 
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+// Custom dark theme enhancements
+.dark-theme {
+  background-color: #121212;
+  color: #ffffff;
+  
+  .content {
+    background-color: #121212;
+  }
+  
+  .copy-message {
+    background-color: #2d5016;
+    color: #90ee90;
+    border: 1px solid #4caf50;
+  }
+  
+  .error-card {
+    background-color: #4a1a1a;
+  }
+  
+  .error-content {
+    color: #ffaaaa;
+  }
+  
+  .no-data,
+  .no-selection {
+    color: #cccccc;
+  }
+  
+  .loading-container p {
+    color: #cccccc;
+  }
+  
+  .tag-count {
+    color: #cccccc;
+  }
+  
+  .tag-name {
+    color: #ffffff;
+  }
+  
+  .image-details-panel {
+    background-color: #1e1e1e;
+    border: 1px solid #444444;
+    
+    .details-header {
+      background-color: #424242 !important;
+      color: white !important;
+      
+      h3 {
+        color: white !important;
+      }
+      
+      button {
+        color: white !important;
+      }
+    }
+    
+    .details-content {
+      background-color: #1e1e1e;
+      
+      .details-section {
+        h4 {
+          color: #64b5f6 !important;
+        }
+        
+        h5 {
+          color: #cccccc !important;
+        }
+      }
+      
+      .details-grid {
+        .detail-item {
+          .detail-label {
+            color: #999999 !important;
+          }
+          
+          .detail-value {
+            color: #ffffff !important;
+            
+            &.digest {
+              background-color: #2a2a2a !important;
+              color: #64b5f6 !important;
+              border: 1px solid #444444;
+              font-family: 'Courier New', monospace;
+            }
+          }
+        }
+      }
+      
+      .config-grid {
+        .detail-item {
+          .detail-label {
+            color: #999999 !important;
+          }
+          
+          .detail-value {
+            color: #ffffff !important;
+          }
+        }
+      }
+      
+      .env-item code {
+        background-color: #333333;
+        border: 1px solid #555555;
+        color: #ffffff;
+      }
+      
+      .port-chip {
+        background-color: #1976d2;
+        color: #ffffff;
+        border: 1px solid #2196f3;
+      }
+      
+      .label-item {
+        border-bottom: 1px solid #444444;
+        
+        .label-key {
+          color: #cccccc;
+        }
+        
+        .label-value {
+          color: #ffffff;
+        }
+      }
+      
+      .layer-item {
+        background-color: #333333;
+        border: 1px solid #555555;
+        
+        .layer-info {
+          .layer-number {
+            background-color: #616161 !important;
+            color: white !important;
+          }
+          
+          .layer-size {
+            background-color: #444444;
+            color: #cccccc;
+          }
+          
+          .layer-digest {
+            color: #999999;
+          }
+        }
+      }
+      
+      .layers-list {
+        .layer-item {
+          background-color: #333333;
+          border: 1px solid #555555;
+          color: #ffffff;
+        }
+      }
+    }
+  }
+  
+  .pull-commands {
+    background-color: #1e1e1e;
+    border: 1px solid #444444;
+    
+    .mat-expansion-panel-header {
+      background-color: #333333 !important;
+      
+      &:hover {
+        background-color: #424242 !important;
+      }
+    }
+    
+    .commands-content {
+      background-color: #1e1e1e;
+      
+      .command-item {
+        border-bottom: 1px solid #444444;
+      }
+      
+      .command-text code {
+        background-color: #333333;
+        border: 1px solid #555555;
+        color: #ffffff;
+      }
+    }
+  }
+  
+  // Material card enhancements
+  mat-card {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    
+    &.config-card {
+      background-color: #1e1e1e;
+      
+      code {
+        background-color: #333333;
+        color: #64b5f6;
+        padding: 2px 6px;
+        border-radius: 3px;
+      }
+    }
+  }
+  
+  // List items in dark mode
+  mat-list-item {
+    &:hover {
+      background-color: #333333 !important;
+    }
+    
+    &.selected {
+      background-color: #424242 !important;
+    }
+  }
+  
+  // Search field in dark mode
+  .mat-mdc-form-field {
+    .mat-mdc-text-field-wrapper {
+      background-color: #333333 !important;
+    }
+    
+    .mat-mdc-form-field-focus-overlay {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+  }
+  
+  // Dialogs in dark mode
+  .mat-mdc-dialog-container {
+    background-color: #1e1e1e !important;
+    color: #ffffff;
+  }
+  
+  // Expansion panels
+  mat-expansion-panel {
+    background-color: #1e1e1e;
+    
+    .mat-expansion-panel-header {
+      background-color: #333333;
+      
+      &:hover {
+        background-color: #424242 !important;
+      }
+    }
+  }
+  
+  // Scrollbars in dark mode
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #1e1e1e;
+    border-radius: 6px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #555555;
+    border-radius: 6px;
+    
+    &:hover {
+      background: #666666;
+    }
+  }
+}

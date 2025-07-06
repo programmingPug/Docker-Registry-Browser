@@ -1,0 +1,188 @@
+<div class="push-dialog">
+  <h2 mat-dialog-title>
+    <mat-icon>cloud_upload</mat-icon>
+    Push Image to Registry
+  </h2>
+  
+  <mat-dialog-content class="dialog-content">
+    <div class="intro-text">
+      <p>Use these commands to build, tag, and push Docker images to the registry:</p>
+      <p><strong>Registry:</strong> <code>{{ data.registryHost }}</code></p>
+    </div>
+
+    <!-- Build and Push Section -->
+    <mat-expansion-panel class="command-section" expanded>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon>build</mat-icon>
+          Build and Push New Image
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      
+      <div class="commands-list">
+        <div class="command-step">
+          <h4>1. Build your Docker image</h4>
+          <div class="command-item">
+            <code>docker build -t my-app:latest .</code>
+            <button mat-icon-button (click)="copyToClipboard('docker build -t my-app:latest .')" matTooltip="Copy">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="command-step">
+          <h4>2. Tag the image for the registry</h4>
+          <div class="command-item">
+            <code>docker tag my-app:latest {{ data.registryHost }}/my-app:latest</code>
+            <button mat-icon-button (click)="copyToClipboard('docker tag my-app:latest ' + data.registryHost + '/my-app:latest')" matTooltip="Copy">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="command-step">
+          <h4>3. Push to registry</h4>
+          <div class="command-item">
+            <code>docker push {{ data.registryHost }}/my-app:latest</code>
+            <button mat-icon-button (click)="copyToClipboard('docker push ' + data.registryHost + '/my-app:latest')" matTooltip="Copy">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-expansion-panel>
+
+    <!-- Push Existing Image Section -->
+    <mat-expansion-panel class="command-section">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon>cloud_upload</mat-icon>
+          Push Existing Image
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      
+      <div class="commands-list">
+        <div class="command-step">
+          <h4>Tag existing image</h4>
+          <div class="command-item">
+            <code>docker tag &lt;existing-image&gt; {{ data.registryHost }}/&lt;repository&gt;:&lt;tag&gt;</code>
+            <button mat-icon-button (click)="copyToClipboard('docker tag <existing-image> ' + data.registryHost + '/<repository>:<tag>')" matTooltip="Copy">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="command-step">
+          <h4>Push to registry</h4>
+          <div class="command-item">
+            <code>docker push {{ data.registryHost }}/&lt;repository&gt;:&lt;tag&gt;</code>
+            <button mat-icon-button (click)="copyToClipboard('docker push ' + data.registryHost + '/<repository>:<tag>')" matTooltip="Copy">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-expansion-panel>
+
+    <!-- Push to Specific Repository Section -->
+    <mat-expansion-panel class="command-section" *ngIf="data.selectedRepo">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon>folder</mat-icon>
+          Push to "{{ data.selectedRepo }}"
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      
+      <div class="commands-list">
+        <div class="command-step">
+          <h4>Tag for this repository</h4>
+          <div class="command-item">
+            <code>docker tag &lt;your-image&gt; {{ data.registryHost }}/{{ data.selectedRepo }}:&lt;tag&gt;</code>
+            <button mat-icon-button (click)="copyToClipboard('docker tag <your-image> ' + data.registryHost + '/' + data.selectedRepo + ':<tag>')" matTooltip="Copy">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="command-step">
+          <h4>Push to this repository</h4>
+          <div class="command-item">
+            <code>docker push {{ data.registryHost }}/{{ data.selectedRepo }}:&lt;tag&gt;</code>
+            <button mat-icon-button (click)="copyToClipboard('docker push ' + data.registryHost + '/' + data.selectedRepo + ':<tag>')" matTooltip="Copy">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-expansion-panel>
+
+    <!-- Multi-arch Build Section -->
+    <mat-expansion-panel class="command-section">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon>architecture</mat-icon>
+          Multi-Architecture Build
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      
+      <div class="commands-list">
+        <div class="command-step">
+          <h4>Create and use buildx builder</h4>
+          <div class="command-item">
+            <code>docker buildx create --use</code>
+            <button mat-icon-button (click)="copyToClipboard('docker buildx create --use')" matTooltip="Copy">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="command-step">
+          <h4>Build and push multi-arch image</h4>
+          <div class="command-item">
+            <code>docker buildx build --platform linux/amd64,linux/arm64 -t {{ data.registryHost }}/my-app:latest --push .</code>
+            <button mat-icon-button (click)="copyToClipboard('docker buildx build --platform linux/amd64,linux/arm64 -t ' + data.registryHost + '/my-app:latest --push .')" matTooltip="Copy">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-expansion-panel>
+
+    <!-- Registry Configuration Section -->
+    <mat-expansion-panel class="command-section">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon>settings</mat-icon>
+          Registry Configuration
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      
+      <div class="commands-list">
+        <div class="info-section">
+          <h4>Allow insecure registry (if needed)</h4>
+          <p>Add this to your Docker daemon configuration (<code>/etc/docker/daemon.json</code> on Linux/Mac or Docker Desktop settings):</p>
+          <div class="command-item">
+            <code>{{ dockerDaemonConfig }}</code>
+            <button mat-icon-button (click)="copyDaemonConfig()" matTooltip="Copy">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </div>
+          <p><small>Restart Docker daemon after making this change.</small></p>
+        </div>
+      </div>
+    </mat-expansion-panel>
+
+    <div class="copy-success" *ngIf="copyMessage">
+      <mat-icon>check_circle</mat-icon>
+      {{ copyMessage }}
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="dialogRef.close()">Close</button>
+    <button mat-raised-button color="primary" (click)="openDockerDocs()">
+      <mat-icon>help</mat-icon>
+      Docker Docs
+    </button>
+  </mat-dialog-actions>
+</div>

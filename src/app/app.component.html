@@ -1,0 +1,292 @@
+<div class="container">
+  <!-- Header -->
+  <mat-toolbar color="primary" class="app-toolbar">
+    <mat-icon>storage</mat-icon>
+    <span class="toolbar-title">Docker Registry Browser</span>
+    <span class="spacer"></span>
+    
+    <!-- Dark Mode Toggle -->
+    <button mat-icon-button (click)="toggleTheme()" [matTooltip]="isDarkMode ? 'Light mode' : 'Dark mode'">
+      <mat-icon>{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>
+    </button>
+    
+    <!-- Menu Button -->
+    <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="Actions">
+      <mat-icon>more_vert</mat-icon>
+    </button>
+    <mat-menu #menu="matMenu">
+      <button mat-menu-item (click)="openPushCommandsDialog()">
+        <mat-icon>cloud_upload</mat-icon>
+        <span>Push Image Commands</span>
+      </button>
+    </mat-menu>
+    
+    <button mat-raised-button color="accent" (click)="loadRepositories()" [disabled]="loading">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+  </mat-toolbar>
+
+  <div class="content">
+    <!-- Registry Configuration -->
+    <mat-card class="config-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>settings</mat-icon>
+          Registry Configuration
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p>Connected to: <code>{{ registryHost }}</code></p>
+        <p><small>Using development proxy to bypass CORS restrictions</small></p>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Copy Success Message -->
+    <div *ngIf="copyMessage" class="copy-message">
+      <mat-icon>check_circle</mat-icon>
+      {{ copyMessage }}
+    </div>
+
+    <!-- Error Display -->
+    <mat-card *ngIf="error" class="error-card">
+      <mat-card-content>
+        <div class="error-content">
+          <mat-icon color="warn">error</mat-icon>
+          <span>{{ error }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Main Content Grid -->
+    <div class="content-grid">
+      <!-- Repositories List -->
+      <mat-card class="repositories-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>folder</mat-icon>
+            Repositories ({{ filteredRepositories.length }})
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <!-- Search -->
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search repositories</mat-label>
+            <input matInput [(ngModel)]="searchTerm" placeholder="Filter repositories...">
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+
+          <!-- Loading -->
+          <div *ngIf="loading" class="loading-container">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Loading repositories...</p>
+          </div>
+
+          <!-- Repositories List -->
+          <mat-nav-list *ngIf="!loading">
+            <mat-list-item *ngFor="let repo of filteredRepositories" 
+                           (click)="loadTags(repo)"
+                           [class.selected]="selectedRepo?.name === repo.name">
+              <mat-icon matListItemIcon>folder</mat-icon>
+              <div matListItemTitle>{{ repo.name }}</div>
+              <mat-icon matListItemMeta>chevron_right</mat-icon>
+            </mat-list-item>
+            <mat-list-item *ngIf="filteredRepositories.length === 0 && !loading">
+              <div matListItemTitle class="no-data">No repositories found</div>
+            </mat-list-item>
+          </mat-nav-list>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Tags List -->
+      <mat-card class="tags-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>label</mat-icon>
+            Tags
+            <span *ngIf="selectedRepo" class="tag-count">({{ selectedRepo.name }}) - {{ tags.length }} tag{{ tags.length !== 1 ? 's' : '' }}</span>
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div *ngIf="!selectedRepo" class="no-selection">
+            <mat-icon>info</mat-icon>
+            <p>Select a repository to view tags</p>
+            <button mat-raised-button color="primary" (click)="openPushCommandsDialog()">
+              <mat-icon>cloud_upload</mat-icon>
+              View Push Commands
+            </button>
+          </div>
+
+          <!-- Loading -->
+          <div *ngIf="loading && selectedRepo" class="loading-container">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Loading tags...</p>
+          </div>
+
+          <!-- Tags List -->
+          <div *ngIf="selectedRepo && !loading" class="tags-container">
+            <div class="tags-list-wrapper">
+              <mat-nav-list>
+                <mat-list-item *ngFor="let tag of tags" class="tag-item">
+                  <mat-icon matListItemIcon>label</mat-icon>
+                  <div matListItemTitle class="tag-name">{{ tag.name }}</div>
+                  <div matListItemMeta class="tag-actions">
+                    <button mat-icon-button 
+                            color="accent"
+                            matTooltip="View image details"
+                            (click)="loadImageDetails(tag)">
+                      <mat-icon>info</mat-icon>
+                    </button>
+                    <button mat-icon-button 
+                            color="primary"
+                            matTooltip="Copy docker pull command"
+                            (click)="copyToClipboard(getDockerPullCommand(selectedRepo!.name, tag.name))">
+                      <mat-icon>content_copy</mat-icon>
+                    </button>
+                  </div>
+                </mat-list-item>
+                <mat-list-item *ngIf="tags.length === 0">
+                  <div matListItemTitle class="no-data">No tags found</div>
+                </mat-list-item>
+              </mat-nav-list>
+            </div>
+
+            <!-- Image Details Panel -->
+            <div *ngIf="showingDetails && selectedTag" class="image-details-panel">
+              <div class="details-header">
+                <h3>
+                  <mat-icon>info</mat-icon>
+                  Image Details: {{ selectedTag.name }}
+                </h3>
+                <button mat-icon-button (click)="closeDetails()" matTooltip="Close details">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+              
+              <div *ngIf="loadingDetails" class="loading-container">
+                <mat-spinner diameter="30"></mat-spinner>
+                <p>Loading image details...</p>
+              </div>
+              
+              <div *ngIf="!loadingDetails && selectedTag.details" class="details-content">
+                <!-- Basic Info -->
+                <div class="details-section">
+                  <h4>Basic Information</h4>
+                  <div class="details-grid">
+                    <div class="detail-item">
+                      <span class="detail-label">Size:</span>
+                      <span class="detail-value">{{ formatBytes(selectedTag.details.size) }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Architecture:</span>
+                      <span class="detail-value">{{ selectedTag.details.architecture }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">OS:</span>
+                      <span class="detail-value">{{ selectedTag.details.os }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Created:</span>
+                      <span class="detail-value">{{ formatDate(selectedTag.details.created) }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Layers:</span>
+                      <span class="detail-value">{{ selectedTag.details.layers.length }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Digest:</span>
+                      <span class="detail-value digest">{{ selectedTag.details.digest.substring(7, 19) }}...</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Configuration -->
+                <div class="details-section" *ngIf="selectedTag.details.config">
+                  <h4>Configuration</h4>
+                  <div class="config-grid">
+                    <div *ngIf="selectedTag.details.config.workingDir" class="detail-item">
+                      <span class="detail-label">Working Directory:</span>
+                      <span class="detail-value">{{ selectedTag.details.config.workingDir }}</span>
+                    </div>
+                    <div *ngIf="selectedTag.details.config.user" class="detail-item">
+                      <span class="detail-label">User:</span>
+                      <span class="detail-value">{{ selectedTag.details.config.user }}</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Environment Variables -->
+                  <div *ngIf="selectedTag.details.config.env && selectedTag.details.config.env.length > 0" class="env-section">
+                    <h5>Environment Variables</h5>
+                    <div class="env-list">
+                      <div *ngFor="let env of selectedTag.details.config.env" class="env-item">
+                        <code>{{ env }}</code>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Exposed Ports -->
+                  <div *ngIf="hasObjectKeys(selectedTag.details.config.exposedPorts)" class="ports-section">
+                    <h5>Exposed Ports</h5>
+                    <div class="ports-list">
+                      <span *ngFor="let port of getObjectKeys(selectedTag.details.config.exposedPorts)" class="port-chip">
+                        {{ port }}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <!-- Labels -->
+                  <div *ngIf="hasObjectKeys(selectedTag.details.config.labels)" class="labels-section">
+                    <h5>Labels</h5>
+                    <div class="labels-list">
+                      <div *ngFor="let label of getObjectKeys(selectedTag.details.config.labels)" class="label-item">
+                        <span class="label-key">{{ label }}:</span>
+                        <span class="label-value">{{ getLabelValue(selectedTag.details.config.labels, label) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Layers -->
+                <div class="details-section">
+                  <h4>Layers ({{ selectedTag.details.layers.length }})</h4>
+                  <div class="layers-list">
+                    <div *ngFor="let layer of selectedTag.details.layers; let i = index" class="layer-item">
+                      <div class="layer-info">
+                        <span class="layer-number">{{ i + 1 }}</span>
+                        <span class="layer-size">{{ formatBytes(layer.size) }}</span>
+                        <span class="layer-digest">{{ layer.digest.substring(7, 19) }}...</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Docker Pull Commands -->
+            <mat-expansion-panel *ngIf="tags.length > 0" class="pull-commands">
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <mat-icon>code</mat-icon>
+                  Docker Pull Commands
+                </mat-panel-title>
+              </mat-expansion-panel-header>
+              <div class="commands-content">
+                <div *ngFor="let tag of tags" class="command-item">
+                  <div class="command-text">
+                    <code>{{ getDockerPullCommand(selectedRepo!.name, tag.name) }}</code>
+                  </div>
+                  <button mat-icon-button 
+                          color="primary"
+                          (click)="copyToClipboard(getDockerPullCommand(selectedRepo!.name, tag.name))"
+                          matTooltip="Copy to clipboard">
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </mat-expansion-panel>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>
