@@ -5,11 +5,6 @@
     <span class="toolbar-title">Docker Registry Browser</span>
     <span class="spacer"></span>
     
-    <!-- Dark Mode Toggle -->
-    <button mat-icon-button (click)="toggleTheme()" [matTooltip]="isDarkMode ? 'Light mode' : 'Dark mode'">
-      <mat-icon>{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>
-    </button>
-    
     <!-- Menu Button -->
     <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="Actions">
       <mat-icon>more_vert</mat-icon>

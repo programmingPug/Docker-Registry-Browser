@@ -8,12 +8,12 @@ services:
     ports:
       - "8080:80"
     environment:
-      # Registry configuration
-      - REGISTRY_HOST=host.docker.internal:5000
-      - REGISTRY_PROTOCOL=http
+      # Registry configuration - update these values
+      - REGISTRY_HOST=${REGISTRY_HOST:-localhost:5000}
+      - REGISTRY_PROTOCOL=${REGISTRY_PROTOCOL:-http}
       # Optional: Basic auth if your registry requires it
-      # - REGISTRY_USERNAME=username
-      # - REGISTRY_PASSWORD=password
+      - REGISTRY_USERNAME=${REGISTRY_USERNAME:-}
+      - REGISTRY_PASSWORD=${REGISTRY_PASSWORD:-}
     extra_hosts:
       # For accessing host services (like local registry)
       - "host.docker.internal:host-gateway"

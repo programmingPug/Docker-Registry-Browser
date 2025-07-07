@@ -1,18 +1,18 @@
 <?xml version="1.0"?>
 <Container version="2">
   <n>docker-registry-browser</n>
-  <Repository>your-dockerhub-username/docker-registry-browser:latest</Repository>
+  <Repository>programmingpug/docker-registry-browser:latest</Repository>
   <Registry>https://hub.docker.com/</Registry>
   <Network>bridge</Network>
   <MyIP/>
   <Shell>sh</Shell>
   <Privileged>false</Privileged>
-  <Support>https://github.com/your-username/docker-registry-browser</Support>
-  <Project>https://github.com/your-username/docker-registry-browser</Project>
+  <Support>https://github.com/programmingPug/docker-registry-browser</Support>
+  <Project>https://github.com/programmingPug/docker-registry-browser</Project>
   <Overview>Docker Registry Browser - A modern web interface for browsing and managing Docker registries. Features include repository browsing, tag listing, image details inspection, and push command generation.</Overview>
   <Category>Tools:</Category>
   <WebUI>http://[IP]:[PORT:8080]/</WebUI>
-  <TemplateURL>https://raw.githubusercontent.com/your-username/docker-registry-browser/main/unraid-template.xml</TemplateURL>
+  <TemplateURL>https://raw.githubusercontent.com/programmingPug/docker-registry-browser/main/unraid-template.xml</TemplateURL>
   <Icon>https://raw.githubusercontent.com/docker/docs/main/assets/images/docker-icon.png</Icon>
   <ExtraParams>--add-host=host.docker.internal:host-gateway</ExtraParams>
   <PostArgs/>

@@ -32,8 +32,18 @@ docker build -t "$FULL_IMAGE_NAME" .
 echo ""
 echo "Build completed successfully!"
 echo ""
-echo "To run the container:"
-echo "docker run -d --name docker-registry-browser -p 8080:80 --add-host=host.docker.internal:host-gateway $FULL_IMAGE_NAME"
+echo "To run the container with environment variables:"
+echo "docker run -d --name docker-registry-browser \\"
+echo "  -p 8080:80 \\"
+echo "  --add-host=host.docker.internal:host-gateway \\"
+echo "  -e REGISTRY_HOST=your-registry.com:5000 \\"
+echo "  -e REGISTRY_PROTOCOL=https \\"
+echo "  $FULL_IMAGE_NAME"
+echo ""
+echo "Or use docker-compose with .env file:"
+echo "cp .env.example .env"
+echo "# Edit .env with your values"
+echo "docker-compose up -d"
 echo ""
 echo "To push to registry (if configured):"
 if [ -n "$REGISTRY" ]; then
@@ -48,13 +58,27 @@ read -p "Do you want to run the container now? (y/N): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "Starting container..."
-    docker run -d \
-        --name docker-registry-browser \
-        -p 8080:80 \
-        --add-host=host.docker.internal:host-gateway \
-        -e REGISTRY_HOST=localhost:5000 \
-        -e REGISTRY_PROTOCOL=http \
-        "$FULL_IMAGE_NAME"
+    
+    # Check if .env file exists
+    if [ -f ".env" ]; then
+        echo "Using .env file for configuration..."
+        docker run -d \
+            --name docker-registry-browser \
+            -p 8080:80 \
+            --add-host=host.docker.internal:host-gateway \
+            --env-file .env \
+            "$FULL_IMAGE_NAME"
+    else
+        echo "No .env file found, using default values..."
+        echo "Copy .env.example to .env and edit it for your registry configuration."
+        docker run -d \
+            --name docker-registry-browser \
+            -p 8080:80 \
+            --add-host=host.docker.internal:host-gateway \
+            -e REGISTRY_HOST=localhost:5000 \
+            -e REGISTRY_PROTOCOL=http \
+            "$FULL_IMAGE_NAME"
+    fi
     
     echo ""
     echo "Container started successfully!"

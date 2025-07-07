@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { DockerRegistryService } from './services/docker-registry.service';
+import { EnvironmentService } from './services/environment.service';
 import { Repository, Tag, ImageDetails } from './models/registry.model';
 import { PushCommandsDialogComponent } from './components/push-commands-dialog.component';
 
@@ -11,7 +12,6 @@ import { PushCommandsDialogComponent } from './components/push-commands-dialog.c
 })
 export class AppComponent implements OnInit {
   registryUrl = '/api'; // Using proxy for CORS
-  registryHost = '192.168.1.193:5000'; // Actual registry host for commands
   repositories: Repository[] = [];
   selectedRepo: Repository | null = null;
   tags: Tag[] = [];
@@ -22,34 +22,19 @@ export class AppComponent implements OnInit {
   copyMessage = '';
   selectedTag: Tag | null = null;
   showingDetails = false;
-  isDarkMode = false;
 
   constructor(
     private registryService: DockerRegistryService,
+    private environmentService: EnvironmentService,
     private dialog: MatDialog
   ) {}
 
   ngOnInit() {
-    // Check for saved theme preference
-    const savedTheme = localStorage.getItem('theme');
-    this.isDarkMode = savedTheme === 'dark';
-    this.applyTheme();
-    
     this.loadRepositories();
   }
 
-  toggleTheme() {
-    this.isDarkMode = !this.isDarkMode;
-    localStorage.setItem('theme', this.isDarkMode ? 'dark' : 'light');
-    this.applyTheme();
-  }
-
-  private applyTheme() {
-    if (this.isDarkMode) {
-      document.body.classList.add('dark-theme');
-    } else {
-      document.body.classList.remove('dark-theme');
-    }
+  get registryHost(): string {
+    return this.environmentService.displayHost;
   }
 
   openPushCommandsDialog() {

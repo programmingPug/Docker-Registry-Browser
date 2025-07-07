@@ -13,6 +13,12 @@ A modern, responsive web interface for browsing Docker registries with support f
 - Support for OCI and Docker v2 manifests
 - Multi-platform image support
 
+## Prerequisites
+
+- Docker installed and running
+- Access to a Docker registry (local or remote)
+- Network connectivity to the registry
+
 ## Quick Start
 
 ### Option 1: Docker Run
@@ -24,13 +30,13 @@ docker run -d \
   --add-host=host.docker.internal:host-gateway \
   -e REGISTRY_HOST=localhost:5000 \
   -e REGISTRY_PROTOCOL=http \
-  your-dockerhub-username/docker-registry-browser:latest
+  programmingpug/docker-registry-browser:latest
 ```
 
 ### Option 2: Docker Compose
 
 ```bash
-git clone https://github.com/your-username/docker-registry-browser.git
+git clone https://github.com/programmingPug/docker-registry-browser.git
 cd docker-registry-browser
 docker-compose up -d
 ```
@@ -38,7 +44,7 @@ docker-compose up -d
 ### Option 3: Build from Source
 
 ```bash
-git clone https://github.com/your-username/docker-registry-browser.git
+git clone https://github.com/programmingPug/docker-registry-browser.git
 cd docker-registry-browser
 docker build -t docker-registry-browser .
 docker run -d -p 8080:80 --add-host=host.docker.internal:host-gateway docker-registry-browser
@@ -66,6 +72,26 @@ docker run -d -p 8080:80 --add-host=host.docker.internal:host-gateway docker-reg
 1. Install the "Compose Manager" plugin
 2. Create a new compose stack with the provided `docker-compose.yml`
 3. Deploy the stack
+
+## Supported Registries
+
+This browser works with any Docker Registry v2 compatible registry, including:
+
+- **Local Docker Registry** - Self-hosted registry containers
+- **Harbor** - Open source cloud native registry
+- **AWS ECR** - Amazon Elastic Container Registry
+- **Azure Container Registry** - Microsoft's container registry
+- **Google Container Registry** - Google Cloud's container registry
+- **GitLab Container Registry** - GitLab's integrated registry
+- **Nexus Repository** - Sonatype's repository manager
+- **Artifactory** - JFrog's universal repository manager
+- **Docker Hub** - (limited support for browsing)
+
+### Registry Requirements
+
+- Docker Registry API v2 support
+- CORS headers configured (for web access)
+- Network accessibility from the browser container
 
 ## Configuration
 
@@ -126,26 +152,44 @@ docker run -d -p 8080:80 --add-host=host.docker.internal:host-gateway docker-reg
 
 ### Registry Connection Issues
 
-**Problem**: Cannot connect to registry
-**Solution**: 
-1. Verify `REGISTRY_HOST` is correct
-2. Check if registry is accessible from container
-3. For local registries, ensure `--add-host=host.docker.internal:host-gateway` is set
+**Problem**: Cannot connect to registry  
+**Solutions**:
+- Verify `REGISTRY_HOST` is correct (hostname:port format)
+- Check if registry is accessible from container
+- For local registries, ensure `--add-host=host.docker.internal:host-gateway` is set
+- Test registry connectivity: `curl http://your-registry:5000/v2/`
 
 ### CORS Issues
 
-**Problem**: API requests blocked by CORS
-**Solution**: The nginx configuration includes CORS headers, but ensure your registry allows cross-origin requests
+**Problem**: API requests blocked by CORS  
+**Solutions**:
+- The nginx configuration includes CORS headers
+- Ensure your registry allows cross-origin requests
+- For development, use the included proxy configuration
 
 ### Authentication Issues
 
-**Problem**: 401 Unauthorized errors
-**Solution**: Set `REGISTRY_USERNAME` and `REGISTRY_PASSWORD` environment variables
+**Problem**: 401 Unauthorized errors  
+**Solutions**:
+- Set `REGISTRY_USERNAME` and `REGISTRY_PASSWORD` environment variables
+- Verify credentials are correct for your registry
+- Check if registry requires authentication
 
 ### Manifest Issues
 
-**Problem**: "OCI index found" errors
-**Solution**: This should be resolved in the current version which supports OCI manifests
+**Problem**: "OCI index found" or manifest parsing errors  
+**Solutions**:
+- Current version supports OCI manifests
+- Ensure registry supports Docker Registry API v2
+- Check if image manifests are properly formatted
+
+### Port Conflicts
+
+**Problem**: Port 8080 already in use  
+**Solutions**:
+- Change the host port: `-p 8081:80` instead of `-p 8080:80`
+- Stop conflicting services or use different ports
+- Check what's using the port: `netstat -tlnp | grep 8080`
 
 ## Development
 
@@ -191,6 +235,13 @@ The container includes a health check endpoint at `/health` that returns:
 MIT License - see LICENSE file for details.
 
 ## Changelog
+
+### v1.1.0
+- Updated Angular to v17
+- Improved error handling
+- Enhanced UI/UX
+- Better multi-platform support
+- Optimized build process
 
 ### v1.0.0
 - Initial release

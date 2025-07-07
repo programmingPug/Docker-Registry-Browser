@@ -1,29 +1,29 @@
 @echo off
-echo 🐳 Docker Registry Browser - Quick Start
-echo ========================================
+REM Development start script for Docker Registry Browser
+REM Usage: start-dev.bat [registry_host] [protocol]
 
-REM Check if npm is installed
-npm --version >nul 2>&1
-if errorlevel 1 (
-    echo ❌ npm is not installed. Please install Node.js and npm first.
-    pause
-    exit /b 1
+REM Set default values
+set REGISTRY_HOST=%1
+set REGISTRY_PROTOCOL=%2
+
+if "%REGISTRY_HOST%"=="" set REGISTRY_HOST=localhost:5000
+if "%REGISTRY_PROTOCOL%"=="" set REGISTRY_PROTOCOL=http
+
+echo Starting Docker Registry Browser development server...
+echo Registry: %REGISTRY_PROTOCOL%://%REGISTRY_HOST%
+echo.
+
+REM Check if .env file exists and load it
+if exist ".env" (
+    echo Loading environment from .env file...
+    for /f "delims== tokens=1,2" %%a in (.env) do (
+        if not "%%a"=="" if not "%%b"=="" (
+            set %%a=%%b
+        )
+    )
 )
 
-REM Check if Angular CLI is installed globally
-ng version >nul 2>&1
-if errorlevel 1 (
-    echo 📦 Installing Angular CLI globally...
-    npm install -g @angular/cli
-)
-
-REM Install dependencies
-echo 📦 Installing dependencies...
-npm install
-
-REM Start the development server
-echo 🚀 Starting development server...
-echo The application will be available at http://localhost:4200
-npm start
+REM Generate proxy configuration and start server
+npm run start
 
 pause
