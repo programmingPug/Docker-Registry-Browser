@@ -14,6 +14,8 @@ services:
       # Optional: Basic auth if your registry requires it
       - REGISTRY_USERNAME=${REGISTRY_USERNAME:-}
       - REGISTRY_PASSWORD=${REGISTRY_PASSWORD:-}
+      # Node.js configuration
+      - NODE_ENV=production
     extra_hosts:
       # For accessing host services (like local registry)
       - "host.docker.internal:host-gateway"

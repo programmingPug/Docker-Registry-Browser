@@ -1,252 +1,186 @@
-# Docker Registry Browser - Production Deployment
+# Docker Registry Browser
 
-A modern, responsive web interface for browsing Docker registries with support for both Docker v2 and OCI manifest formats.
+A simple, reliable web interface for browsing Docker registries with a Node.js proxy to handle CORS issues. Perfect for Unraid users who want to easily view and manage their Docker registry.
 
 ## Features
 
-- Browse repositories and tags
-- View detailed image information (layers, environment, labels, etc.)
-- Copy docker pull commands
-- Push command generator with examples
-- Dark/Light mode toggle
-- Fully responsive design
-- Support for OCI and Docker v2 manifests
-- Multi-platform image support
-
-## Prerequisites
-
-- Docker installed and running
-- Access to a Docker registry (local or remote)
-- Network connectivity to the registry
+- Browse repositories and tags in your Docker registry
+- View detailed image information (size, layers, creation date, etc.)
+- Copy docker pull commands with one click
+- Clean, responsive web interface
+- **CORS-free** - Uses Node.js proxy to avoid browser restrictions
+- Works with any Docker Registry v2 compatible registry
 
 ## Quick Start
 
-### Option 1: Docker Run
-
+### Build and Run
 ```bash
-docker run -d \
-  --name docker-registry-browser \
-  -p 8080:80 \
-  --add-host=host.docker.internal:host-gateway \
-  -e REGISTRY_HOST=localhost:5000 \
-  -e REGISTRY_PROTOCOL=http \
-  programmingpug/docker-registry-browser:latest
-```
-
-### Option 2: Docker Compose
-
-```bash
-git clone https://github.com/programmingPug/docker-registry-browser.git
-cd docker-registry-browser
-docker-compose up -d
-```
-
-### Option 3: Build from Source
-
-```bash
-git clone https://github.com/programmingPug/docker-registry-browser.git
-cd docker-registry-browser
+# Build the image
 docker build -t docker-registry-browser .
-docker run -d -p 8080:80 --add-host=host.docker.internal:host-gateway docker-registry-browser
+
+# Run with your registry
+docker run -d -p 8080:80 \
+  -e REGISTRY_HOST=your-registry:5000 \
+  -e REGISTRY_PROTOCOL=http \
+  docker-registry-browser
+```
+
+### Using Docker Compose
+```bash
+# Set your registry in .env or environment
+export REGISTRY_HOST=192.168.1.100:5000
+export REGISTRY_PROTOCOL=http
+
+# Start with compose
+docker-compose up -d
 ```
 
 ## Unraid Installation
 
-### Method 1: Community Applications (Recommended)
+### 1. Community Applications (Recommended)
+- Go to **Apps** tab in Unraid
+- Search for "Docker Registry Browser"
+- Click **Install**
 
-1. In Unraid, go to **Apps** tab
-2. Search for "Docker Registry Browser"
-3. Click **Install**
-4. Configure the settings and click **Apply**
+### 2. Manual Configuration
+Use these settings in the Unraid template:
 
-### Method 2: Manual Template
+#### Basic Configuration
+- **Registry Host**: `192.168.1.100:5000` (your Unraid IP and registry port)
+- **Registry Protocol**: `http` (or `https` for secure registries)
 
-1. In Unraid, go to **Docker** tab
-2. Click **Add Container**
-3. Set **Template** to the template URL or upload the XML template
-4. Configure the required settings
-5. Click **Apply**
+#### For Authenticated Registries (Optional)
+- **Username**: Your registry username
+- **Password**: Your registry password
 
-### Method 3: Docker Compose (Unraid 6.12+)
+### 3. Common Unraid Examples
 
-1. Install the "Compose Manager" plugin
-2. Create a new compose stack with the provided `docker-compose.yml`
-3. Deploy the stack
+#### Local Registry on Unraid Host
+```
+Registry Host: 192.168.1.100:5000
+Registry Protocol: http
+```
 
-## Supported Registries
+#### Registry Container on Unraid
+```
+Registry Host: registry:5000
+Registry Protocol: http
+```
 
-This browser works with any Docker Registry v2 compatible registry, including:
-
-- **Local Docker Registry** - Self-hosted registry containers
-- **Harbor** - Open source cloud native registry
-- **AWS ECR** - Amazon Elastic Container Registry
-- **Azure Container Registry** - Microsoft's container registry
-- **Google Container Registry** - Google Cloud's container registry
-- **GitLab Container Registry** - GitLab's integrated registry
-- **Nexus Repository** - Sonatype's repository manager
-- **Artifactory** - JFrog's universal repository manager
-- **Docker Hub** - (limited support for browsing)
-
-### Registry Requirements
-
-- Docker Registry API v2 support
-- CORS headers configured (for web access)
-- Network accessibility from the browser container
+#### Remote Secure Registry
+```
+Registry Host: my-registry.com:443
+Registry Protocol: https
+Username: myuser
+Password: mypass
+```
 
 ## Configuration
 
 ### Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `REGISTRY_HOST` | `localhost:5000` | Docker registry hostname and port |
-| `REGISTRY_PROTOCOL` | `http` | Protocol (http/https) |
-| `REGISTRY_USERNAME` | - | Registry username (optional) |
-| `REGISTRY_PASSWORD` | - | Registry password (optional) |
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `REGISTRY_HOST` | Yes | `localhost:5000` | Registry hostname and port |
+| `REGISTRY_PROTOCOL` | Yes | `http` | `http` or `https` |
+| `REGISTRY_USERNAME` | No | - | Username for authenticated registries |
+| `REGISTRY_PASSWORD` | No | - | Password for authenticated registries |
 
-### Unraid Configuration
+## How It Works
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| **WebUI Port** | `8080` | Port for web interface |
-| **Registry Host** | `localhost:5000` | Your registry address |
-| **Registry Protocol** | `http` | http or https |
-| **Registry Username** | - | Optional authentication |
-| **Registry Password** | - | Optional authentication |
+The application uses a **Node.js Express server** with `http-proxy-middleware` to proxy all registry API calls. This solves CORS issues that would otherwise prevent browsers from accessing Docker registries directly.
 
-## Usage
+### Request Flow
+```
+Browser → /api/v2/_catalog → Node.js Proxy → Registry
+Browser ← Response with CORS headers ← Node.js Proxy ← Registry
+```
 
-1. Access the web interface at `http://your-server:8080`
-2. Browse repositories on the left panel
-3. Select a repository to view its tags
-4. Click the info button to view detailed image information
-5. Use the menu for push commands and settings
-6. Toggle dark/light mode using the theme button in the toolbar
+### Why This Works
+- **No CORS Issues**: Proxy adds proper CORS headers automatically
+- **Authentication**: Basic auth handled transparently by proxy
+- **Any Registry**: Works with any Docker Registry v2 compatible API
+- **Production Ready**: Uses proven `http-proxy-middleware` library
 
-## Features Guide
+## Supported Registries
 
-### Dark Mode
-- Toggle between light and dark themes using the moon/sun icon in the toolbar
-- Theme preference is saved locally and persists between sessions
-- All UI components are properly themed for optimal visibility in both modes
-
-### Browsing Images
-- Repository list shows all available repositories
-- Click a repository to load its tags
-- Search repositories using the search field
-- View tag details by clicking the info button
-
-### Push Commands
-- Access via the menu (three dots) in the toolbar
-- Get step-by-step instructions for pushing images
-- Copy commands to clipboard
-- Includes multi-architecture build instructions
-
-### Image Details
-- View comprehensive image information
-- See layer details, environment variables, labels
-- Check image size, architecture, and creation date
-- Inspect exposed ports and volumes
+Works with any Docker Registry v2 compatible registry:
+- **Docker Registry** (open source)
+- **Harbor**
+- **AWS ECR**
+- **Azure Container Registry** 
+- **Google Container Registry**
+- **GitLab Container Registry**
+- **Nexus Repository**
+- **Artifactory**
 
 ## Troubleshooting
 
-### Registry Connection Issues
+### "Cannot connect to registry proxy"
+- Ensure you're accessing `http://your-server:8080`, not a dev server
+- Check container logs: `docker logs container-name`
+- Verify `REGISTRY_HOST` and `REGISTRY_PROTOCOL` are correct
 
-**Problem**: Cannot connect to registry  
-**Solutions**:
-- Verify `REGISTRY_HOST` is correct (hostname:port format)
-- Check if registry is accessible from container
-- For local registries, ensure `--add-host=host.docker.internal:host-gateway` is set
+### "Registry server error (502)"
+- Registry is not accessible from the container
+- Check if registry is running: `docker ps | grep registry`
 - Test registry connectivity: `curl http://your-registry:5000/v2/`
+- For Unraid: Use server IP, not `localhost`
 
-### CORS Issues
-
-**Problem**: API requests blocked by CORS  
-**Solutions**:
-- The nginx configuration includes CORS headers
-- Ensure your registry allows cross-origin requests
-- For development, use the included proxy configuration
-
-### Authentication Issues
-
-**Problem**: 401 Unauthorized errors  
-**Solutions**:
-- Set `REGISTRY_USERNAME` and `REGISTRY_PASSWORD` environment variables
-- Verify credentials are correct for your registry
-- Check if registry requires authentication
-
-### Manifest Issues
-
-**Problem**: "OCI index found" or manifest parsing errors  
-**Solutions**:
-- Current version supports OCI manifests
-- Ensure registry supports Docker Registry API v2
-- Check if image manifests are properly formatted
-
-### Port Conflicts
-
-**Problem**: Port 8080 already in use  
-**Solutions**:
-- Change the host port: `-p 8081:80` instead of `-p 8080:80`
-- Stop conflicting services or use different ports
-- Check what's using the port: `netstat -tlnp | grep 8080`
+### "No repositories found"
+- Registry is accessible but empty (no images pushed yet)
+- Authentication may be required but not configured
+- Check registry has repositories: `curl http://your-registry:5000/v2/_catalog`
 
 ## Development
 
-### Building
+### Build from Source
+```bash
+git clone https://github.com/your-username/docker-registry-browser.git
+cd docker-registry-browser
+docker build -t docker-registry-browser .
+```
 
+### Local Development
 ```bash
 # Install dependencies
 npm install
 
-# Development server
+# Start Angular dev server (for frontend development)
 npm start
 
-# Build for production
-npm run build
-
-# Build Docker image
-docker build -t docker-registry-browser .
+# Start Node.js proxy server (for backend testing)
+npm run server
 ```
 
-### Contributing
+## Health Monitoring
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## Health Check
-
-The container includes a health check endpoint at `/health` that returns:
-- `200 OK` with "healthy" response when running properly
-- Checks every 30 seconds with 3 retries
+The container provides health check endpoints:
+- **`/health`** - Application health status
+- **`/proxy-status`** - Proxy configuration status
 
 ## Security
 
-- Runs as non-root user (nginx:nginx)
-- Includes security headers
+- Runs as non-root user
 - No sensitive data stored in container
-- Registry credentials passed via environment variables
+- Registry credentials only used for API authentication
+- All communication proxied through secure server
 
 ## License
 
 MIT License - see LICENSE file for details.
 
-## Changelog
+## Support
 
-### v1.1.0
-- Updated Angular to v17
-- Improved error handling
-- Enhanced UI/UX
-- Better multi-platform support
-- Optimized build process
+- **GitHub Issues**: Report bugs and request features
+- **Unraid Forums**: Community support for Unraid-specific questions
+- **Documentation**: Check this README for common solutions
 
-### v1.0.0
-- Initial release
-- Support for Docker v2 and OCI manifests
-- Responsive design
-- Push command generation
-- Dark/Light mode
-- Multi-platform image support
+---
+
+## Technical Details
+
+- **Frontend**: Angular 17 with Material Design
+- **Backend**: Node.js Express with http-proxy-middleware
+- **Container**: Alpine Linux for minimal size
+- **Architecture**: Multi-stage Docker build for optimized production image

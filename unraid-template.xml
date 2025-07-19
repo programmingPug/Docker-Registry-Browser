@@ -9,22 +9,28 @@
   <Privileged>false</Privileged>
   <Support>https://github.com/programmingPug/docker-registry-browser</Support>
   <Project>https://github.com/programmingPug/docker-registry-browser</Project>
-  <Overview>Docker Registry Browser - A modern web interface for browsing and managing Docker registries. Features include repository browsing, tag listing, image details inspection, and push command generation.</Overview>
+  <Overview>Docker Registry Browser - A simple web interface for browsing Docker registries. Browse repositories, view tags, and get pull commands. Perfect for managing your local Docker registry.</Overview>
   <Category>Tools:</Category>
   <WebUI>http://[IP]:[PORT:8080]/</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/programmingPug/docker-registry-browser/main/unraid-template.xml</TemplateURL>
   <Icon>https://raw.githubusercontent.com/docker/docs/main/assets/images/docker-icon.png</Icon>
-  <ExtraParams>--add-host=host.docker.internal:host-gateway</ExtraParams>
+  <ExtraParams></ExtraParams>
   <PostArgs/>
   <CPUset/>
   <DateInstalled/>
   <DonateText/>
   <DonateLink/>
   <Requires/>
+  
+  <!-- Simplified configuration - only the essentials -->
   <Config Name="WebUI Port" Target="80" Default="8080" Mode="tcp" Description="Port for accessing the web interface" Type="Port" Display="always" Required="true" Mask="false">8080</Config>
-  <Config Name="Registry Host" Target="REGISTRY_HOST" Default="localhost:5000" Mode="" Description="Docker registry host and port (e.g., localhost:5000, registry.example.com:5000)" Type="Variable" Display="always" Required="true" Mask="false">localhost:5000</Config>
-  <Config Name="Registry Protocol" Target="REGISTRY_PROTOCOL" Default="http" Mode="" Description="Protocol to use for registry connection (http or https)" Type="Variable" Display="always" Required="true" Mask="false">http</Config>
-  <Config Name="Registry Username" Target="REGISTRY_USERNAME" Default="" Mode="" Description="Username for registry authentication (leave empty for no auth)" Type="Variable" Display="always" Required="false" Mask="false"></Config>
-  <Config Name="Registry Password" Target="REGISTRY_PASSWORD" Default="" Mode="" Description="Password for registry authentication (leave empty for no auth)" Type="Variable" Display="always" Required="false" Mask="true"></Config>
-  <Config Name="App Data" Target="/app/data" Default="/mnt/user/appdata/docker-registry-browser" Mode="rw" Description="Application data directory" Type="Path" Display="advanced" Required="false" Mask="false">/mnt/user/appdata/docker-registry-browser</Config>
+  
+  <Config Name="Registry Host" Target="REGISTRY_HOST" Default="" Mode="" Description="Your Docker registry host and port. Examples: 192.168.1.100:5000 (for Unraid host), registry:5000 (for container), hub.example.com (for remote)" Type="Variable" Display="always" Required="true" Mask="false"></Config>
+  
+  <Config Name="Registry Protocol" Target="REGISTRY_PROTOCOL" Default="http" Mode="" Description="http for local/insecure registries, https for secure registries" Type="Variable" Display="always" Required="true" Mask="false">http</Config>
+  
+  <!-- Optional authentication - most users won't need this -->
+  <Config Name="Username (Optional)" Target="REGISTRY_USERNAME" Default="" Mode="" Description="Leave empty if your registry doesn't require authentication" Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  
+  <Config Name="Password (Optional)" Target="REGISTRY_PASSWORD" Default="" Mode="" Description="Leave empty if your registry doesn't require authentication" Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
 </Container>
