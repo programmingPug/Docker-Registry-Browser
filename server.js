@@ -42,7 +42,14 @@ const proxyOptions = {
     console.log(`[PROXY] ${req.method} ${req.url} -> ${registryUrl}${req.url.replace('/api', '')}`);
     
     // Ensure proper headers
-    proxyReq.setHeader('User-Agent', 'Docker-Registry-Browser/1.0');
+    proxyReq.setHeader('User-Agent', 'Docker-Registry-Browser/1.2');
+    
+    // Handle DELETE operations with special logging
+    if (req.method === 'DELETE') {
+      console.log(`[DELETE OPERATION] Deleting: ${req.url}`);
+      // Add Docker-specific headers for delete operations
+      proxyReq.setHeader('Accept', 'application/vnd.docker.distribution.manifest.v2+json');
+    }
   },
   
   onProxyRes: (proxyRes, req, res) => {
@@ -84,6 +91,29 @@ app.options('/api/*', (req, res) => {
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma');
   res.header('Access-Control-Max-Age', '86400');
   res.sendStatus(204);
+});
+
+// Delete operation validation middleware
+app.delete('/api/v2/:repository/manifests/:reference', (req, res, next) => {
+  const { repository, reference } = req.params;
+  console.log(`[DELETE VALIDATION] Repository: ${repository}, Reference: ${reference}`);
+  
+  // Log the delete operation for audit purposes
+  console.log(`[AUDIT] DELETE request for ${repository}:${reference} at ${new Date().toISOString()}`);
+  
+  // Continue to proxy
+  next();
+});
+
+app.delete('/api/v2/:repository/tags/:tag', (req, res, next) => {
+  const { repository, tag } = req.params;
+  console.log(`[DELETE VALIDATION] Repository: ${repository}, Tag: ${tag}`);
+  
+  // Log the delete operation for audit purposes
+  console.log(`[AUDIT] DELETE request for tag ${repository}:${tag} at ${new Date().toISOString()}`);
+  
+  // Continue to proxy
+  next();
 });
 
 // Health check endpoint

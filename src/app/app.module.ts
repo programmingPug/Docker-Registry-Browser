@@ -18,14 +18,27 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatSelectModule } from '@angular/material/select';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatSliderModule } from '@angular/material/slider';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatBadgeModule } from '@angular/material/badge';
 
 import { AppComponent } from './app.component';
 import { PushCommandsDialogComponent } from './components/push-commands-dialog.component';
+import { ConfirmationDialogComponent } from './components/confirmation-dialog.component';
+import { AdvancedSearchComponent } from './components/advanced-search.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    PushCommandsDialogComponent
+    PushCommandsDialogComponent,
+    ConfirmationDialogComponent,
+    AdvancedSearchComponent
   ],
   imports: [
     BrowserModule,
@@ -44,7 +57,16 @@ import { PushCommandsDialogComponent } from './components/push-commands-dialog.c
     MatTooltipModule,
     MatDialogModule,
     MatMenuModule,
-    MatDividerModule
+    MatDividerModule,
+    MatSelectModule,
+    MatChipsModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatCheckboxModule,
+    MatSliderModule,
+    MatSnackBarModule,
+    MatTabsModule,
+    MatBadgeModule
   ],
   providers: [],
   bootstrap: [AppComponent]

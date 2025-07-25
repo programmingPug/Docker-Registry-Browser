@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom, timeout } from 'rxjs';
-import { Repository, Tag, RegistryResponse, TagsResponse, ImageDetails, ManifestResponse, ConfigResponse } from '../models/registry.model';
+import { Repository, Tag, RegistryResponse, TagsResponse, ImageDetails, ManifestResponse, ConfigResponse, DeleteResult } from '../models/registry.model';
 import { EnvironmentService } from './environment.service';
 
 @Injectable({
@@ -244,6 +244,142 @@ export class DockerRegistryService {
       return new Date(dateString).toLocaleString();
     } catch (error) {
       return 'Invalid Date';
+    }
+  }
+
+  // Delete operations
+  async deleteTag(repositoryName: string, tag: string): Promise<DeleteResult> {
+    try {
+      // First, get the manifest to obtain the digest
+      const manifestUrl = `${this.baseUrl}/v2/${repositoryName}/manifests/${tag}`;
+      console.log(`Getting manifest for deletion: ${manifestUrl}`);
+      
+      const manifestHeaders = new HttpHeaders({
+        'Accept': [
+          'application/vnd.docker.distribution.manifest.v2+json',
+          'application/vnd.docker.distribution.manifest.list.v2+json',
+          'application/vnd.oci.image.manifest.v1+json',
+          'application/vnd.oci.image.index.v1+json'
+        ].join(', ')
+      });
+
+      const manifestResponse = await firstValueFrom(
+        this.http.get(manifestUrl, { 
+          headers: manifestHeaders,
+          observe: 'response' // Get full response to access headers
+        }).pipe(timeout(this.requestTimeout))
+      );
+
+      // Get the digest from the Docker-Content-Digest header
+      const digest = manifestResponse.headers.get('Docker-Content-Digest');
+      if (!digest) {
+        throw new Error('Could not obtain manifest digest for deletion');
+      }
+
+      // Now delete using the digest
+      const deleteUrl = `${this.baseUrl}/v2/${repositoryName}/manifests/${digest}`;
+      console.log(`Deleting manifest: ${deleteUrl}`);
+      
+      await firstValueFrom(
+        this.http.delete(deleteUrl, this.getRequestOptions())
+          .pipe(timeout(this.requestTimeout))
+      );
+
+      console.log(`Successfully deleted tag: ${repositoryName}:${tag}`);
+      return {
+        success: true,
+        message: `Tag ${tag} deleted successfully`,
+        deletedItem: `${repositoryName}:${tag}`
+      };
+    } catch (error) {
+      console.error('Delete tag failed:', error);
+      let errorMessage = `Failed to delete tag ${repositoryName}:${tag}`;
+      
+      if (error instanceof HttpErrorResponse) {
+        switch (error.status) {
+          case 404:
+            errorMessage = `Tag ${tag} not found in repository ${repositoryName}`;
+            break;
+          case 405:
+            errorMessage = 'Delete operation not supported by this registry';
+            break;
+          case 401:
+          case 403:
+            errorMessage = 'Insufficient permissions to delete tags';
+            break;
+          default:
+            errorMessage = `Delete failed (${error.status}): ${error.message || 'Unknown error'}`;
+        }
+      }
+      
+      return {
+        success: false,
+        message: errorMessage
+      };
+    }
+  }
+
+  async deleteRepository(repositoryName: string): Promise<DeleteResult> {
+    try {
+      console.log(`Attempting to delete repository: ${repositoryName}`);
+      
+      // Get all tags first
+      const tags = await this.getTags(repositoryName);
+      
+      if (tags.length === 0) {
+        return {
+          success: false,
+          message: 'Repository appears to be empty or already deleted'
+        };
+      }
+
+      // Delete all tags
+      let deletedCount = 0;
+      let errors: string[] = [];
+      
+      for (const tag of tags) {
+        try {
+          const result = await this.deleteTag(repositoryName, tag.name);
+          if (result.success) {
+            deletedCount++;
+          } else {
+            errors.push(`${tag.name}: ${result.message}`);
+          }
+        } catch (error) {
+          errors.push(`${tag.name}: ${error}`);
+        }
+      }
+
+      if (deletedCount === tags.length) {
+        console.log(`Successfully deleted repository: ${repositoryName}`);
+        return {
+          success: true,
+          message: `Repository ${repositoryName} deleted successfully (${deletedCount} tags removed)`,
+          deletedItem: repositoryName
+        };
+      } else {
+        return {
+          success: false,
+          message: `Partially deleted repository ${repositoryName}: ${deletedCount}/${tags.length} tags deleted. Errors: ${errors.join(', ')}`
+        };
+      }
+    } catch (error) {
+      console.error('Delete repository failed:', error);
+      return {
+        success: false,
+        message: `Failed to delete repository ${repositoryName}: ${error}`
+      };
+    }
+  }
+
+  // Check if tag is the last one in repository
+  async isLastTag(repositoryName: string): Promise<boolean> {
+    try {
+      const tags = await this.getTags(repositoryName);
+      return tags.length <= 1;
+    } catch (error) {
+      console.error('Failed to check tag count:', error);
+      return false;
     }
   }
 

@@ -1,10 +1,16 @@
 export interface Repository {
   name: string;
+  tagCount?: number;
+  totalSize?: number;
+  lastModified?: string;
+  isFavorite?: boolean;
 }
 
 export interface Tag {
   name: string;
   details?: ImageDetails;
+  lastModified?: string;
+  size?: number;
 }
 
 export interface RegistryResponse {
@@ -69,4 +75,41 @@ export interface ConfigResponse {
     created_by: string;
     empty_layer?: boolean;
   }[];
+}
+
+// New interfaces for v1.2.0 features
+export interface DeleteResult {
+  success: boolean;
+  message: string;
+  deletedItem?: string;
+}
+
+export interface SearchFilter {
+  name?: string;
+  minSize?: number;
+  maxSize?: number;
+  dateFrom?: Date;
+  dateTo?: Date;
+  architecture?: string;
+  os?: string;
+}
+
+export interface SortOption {
+  field: 'name' | 'size' | 'created' | 'modified';
+  direction: 'asc' | 'desc';
+}
+
+export interface SearchHistory {
+  query: string;
+  timestamp: Date;
+  results: number;
+}
+
+export interface ConfirmationDialogData {
+  title: string;
+  message: string;
+  confirmText: string;
+  cancelText: string;
+  dangerous?: boolean;
+  itemName?: string;
 }

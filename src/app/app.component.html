@@ -3,6 +3,7 @@
   <mat-toolbar color="primary" class="app-toolbar">
     <mat-icon>storage</mat-icon>
     <span class="toolbar-title">Docker Registry Browser</span>
+    <span class="version-badge">v1.2.0</span>
     <span class="spacer"></span>
     
     <!-- Menu Button -->
@@ -13,6 +14,11 @@
       <button mat-menu-item (click)="openPushCommandsDialog()">
         <mat-icon>cloud_upload</mat-icon>
         <span>Push Image Commands</span>
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="searchFilterService.clearSearchHistory()">
+        <mat-icon>history</mat-icon>
+        <span>Clear Search History</span>
       </button>
     </mat-menu>
     
@@ -33,9 +39,27 @@
       </mat-card-header>
       <mat-card-content>
         <p>Connected to: <code>{{ registryHost }}</code></p>
-        <p><small>Using development proxy to bypass CORS restrictions</small></p>
+        <p><small>Using Node.js proxy to bypass CORS restrictions</small></p>
+        <div class="stats" *ngIf="repositories.length > 0">
+          <span class="stat-item">
+            <mat-icon>folder</mat-icon>
+            {{ repositories.length }} repositories
+          </span>
+          <span class="stat-item" *ngIf="favorites.length > 0">
+            <mat-icon>star</mat-icon>
+            {{ favorites.length }} favorites
+          </span>
+        </div>
       </mat-card-content>
     </mat-card>
+
+    <!-- Advanced Search Component -->
+    <app-advanced-search
+      [filter]="searchFilter"
+      [sortOption]="sortOption"
+      (filterChange)="onFilterChange($event)"
+      (sortChange)="onSortChange($event)">
+    </app-advanced-search>
 
     <!-- Copy Success Message -->
     <div *ngIf="copyMessage" class="copy-message">
@@ -49,6 +73,10 @@
         <div class="error-content">
           <mat-icon color="warn">error</mat-icon>
           <span>{{ error }}</span>
+          <button mat-button color="primary" (click)="retryConnection()" *ngIf="!loading">
+            <mat-icon>refresh</mat-icon>
+            Retry
+          </button>
         </div>
       </mat-card-content>
     </mat-card>
@@ -60,17 +88,14 @@
         <mat-card-header>
           <mat-card-title>
             <mat-icon>folder</mat-icon>
-            Repositories ({{ filteredRepositories.length }})
+            Repositories 
+            <mat-chip-listbox *ngIf="filteredRepositories.length !== repositories.length">
+              <mat-chip-option>{{ filteredRepositories.length }} of {{ repositories.length }}</mat-chip-option>
+            </mat-chip-listbox>
+            <span *ngIf="filteredRepositories.length === repositories.length">({{ repositories.length }})</span>
           </mat-card-title>
         </mat-card-header>
         <mat-card-content>
-          <!-- Search -->
-          <mat-form-field appearance="outline" class="search-field">
-            <mat-label>Search repositories</mat-label>
-            <input matInput [(ngModel)]="searchTerm" placeholder="Filter repositories...">
-            <mat-icon matSuffix>search</mat-icon>
-          </mat-form-field>
-
           <!-- Loading -->
           <div *ngIf="loading" class="loading-container">
             <mat-spinner diameter="40"></mat-spinner>
@@ -81,13 +106,40 @@
           <mat-nav-list *ngIf="!loading">
             <mat-list-item *ngFor="let repo of filteredRepositories" 
                            (click)="loadTags(repo)"
-                           [class.selected]="selectedRepo?.name === repo.name">
-              <mat-icon matListItemIcon>folder</mat-icon>
-              <div matListItemTitle>{{ repo.name }}</div>
-              <mat-icon matListItemMeta>chevron_right</mat-icon>
+                           [class.selected]="selectedRepo?.name === repo.name"
+                           class="repository-item">
+              <mat-icon matListItemIcon [class.favorite-icon]="repo.isFavorite">
+                {{ repo.isFavorite ? 'star' : 'folder' }}
+              </mat-icon>
+              <div matListItemTitle class="repo-title">
+                {{ repo.name }}
+                <mat-chip-listbox *ngIf="repo.tagCount">
+                  <mat-chip-option>{{ repo.tagCount }} tags</mat-chip-option>
+                </mat-chip-listbox>
+              </div>
+              <div matListItemMeta class="repo-actions">
+                <button mat-icon-button 
+                        (click)="toggleFavorite(repo); $event.stopPropagation()"
+                        [matTooltip]="repo.isFavorite ? 'Remove from favorites' : 'Add to favorites'">
+                  <mat-icon [color]="repo.isFavorite ? 'warn' : 'default'">
+                    {{ repo.isFavorite ? 'star' : 'star_border' }}
+                  </mat-icon>
+                </button>
+                <button mat-icon-button 
+                        color="warn"
+                        (click)="deleteRepository(repo); $event.stopPropagation()"
+                        matTooltip="Delete repository">
+                  <mat-icon>delete</mat-icon>
+                </button>
+                <mat-icon>chevron_right</mat-icon>
+              </div>
             </mat-list-item>
             <mat-list-item *ngIf="filteredRepositories.length === 0 && !loading">
-              <div matListItemTitle class="no-data">No repositories found</div>
+              <div matListItemTitle class="no-data">
+                <mat-icon>info</mat-icon>
+                <span *ngIf="repositories.length === 0">No repositories found</span>
+                <span *ngIf="repositories.length > 0">No repositories match the current filters</span>
+              </div>
             </mat-list-item>
           </mat-nav-list>
         </mat-card-content>
@@ -99,7 +151,13 @@
           <mat-card-title>
             <mat-icon>label</mat-icon>
             Tags
-            <span *ngIf="selectedRepo" class="tag-count">({{ selectedRepo.name }}) - {{ tags.length }} tag{{ tags.length !== 1 ? 's' : '' }}</span>
+            <span *ngIf="selectedRepo" class="tag-count">
+              ({{ selectedRepo.name }}) - 
+              <mat-chip-listbox *ngIf="filteredTags.length !== tags.length">
+                <mat-chip-option>{{ filteredTags.length }} of {{ tags.length }}</mat-chip-option>
+              </mat-chip-listbox>
+              <span *ngIf="filteredTags.length === tags.length">{{ tags.length }} tag{{ tags.length !== 1 ? 's' : '' }}</span>
+            </span>
           </mat-card-title>
         </mat-card-header>
         <mat-card-content>
@@ -122,9 +180,14 @@
           <div *ngIf="selectedRepo && !loading" class="tags-container">
             <div class="tags-list-wrapper">
               <mat-nav-list>
-                <mat-list-item *ngFor="let tag of tags" class="tag-item">
+                <mat-list-item *ngFor="let tag of filteredTags" class="tag-item">
                   <mat-icon matListItemIcon>label</mat-icon>
-                  <div matListItemTitle class="tag-name">{{ tag.name }}</div>
+                  <div matListItemTitle class="tag-name">
+                    {{ tag.name }}
+                    <mat-chip-listbox *ngIf="tag.size">
+                      <mat-chip-option>{{ formatBytes(tag.size) }}</mat-chip-option>
+                    </mat-chip-listbox>
+                  </div>
                   <div matListItemMeta class="tag-actions">
                     <button mat-icon-button 
                             color="accent"
@@ -138,10 +201,20 @@
                             (click)="copyToClipboard(getDockerPullCommand(selectedRepo!.name, tag.name))">
                       <mat-icon>content_copy</mat-icon>
                     </button>
+                    <button mat-icon-button 
+                            color="warn"
+                            matTooltip="Delete tag"
+                            (click)="deleteTag(selectedRepo!, tag)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
                   </div>
                 </mat-list-item>
-                <mat-list-item *ngIf="tags.length === 0">
-                  <div matListItemTitle class="no-data">No tags found</div>
+                <mat-list-item *ngIf="filteredTags.length === 0">
+                  <div matListItemTitle class="no-data">
+                    <mat-icon>info</mat-icon>
+                    <span *ngIf="tags.length === 0">No tags found</span>
+                    <span *ngIf="tags.length > 0">No tags match the current filters</span>
+                  </div>
                 </mat-list-item>
               </mat-nav-list>
             </div>
@@ -258,7 +331,7 @@
             </div>
 
             <!-- Docker Pull Commands -->
-            <mat-expansion-panel *ngIf="tags.length > 0" class="pull-commands">
+            <mat-expansion-panel *ngIf="filteredTags.length > 0" class="pull-commands">
               <mat-expansion-panel-header>
                 <mat-panel-title>
                   <mat-icon>code</mat-icon>
@@ -266,7 +339,7 @@
                 </mat-panel-title>
               </mat-expansion-panel-header>
               <div class="commands-content">
-                <div *ngFor="let tag of tags" class="command-item">
+                <div *ngFor="let tag of filteredTags" class="command-item">
                   <div class="command-text">
                     <code>{{ getDockerPullCommand(selectedRepo!.name, tag.name) }}</code>
                   </div>

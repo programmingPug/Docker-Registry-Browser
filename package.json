@@ -1,6 +1,6 @@
 {
   "name": "docker-registry-browser",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "scripts": {
     "ng": "ng",
     "start": "node generate-proxy-config.js && ng serve --proxy-config proxy.conf.json",
